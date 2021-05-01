@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: "{\"endpointCredentials\": [{\"endpoint\":\"https://nuget.pkg.github.com/Dafydd_E/index.json\", \"username\":\"GithubToken\", \"password\":\"$GITHUB_TOKEN\"}]}"
+      VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: "{\"endpointCredentials\": [{\"endpoint\":\"https://nuget.pkg.github.com/Dafydd_E/index.json\", \"username\":\"GithubToken\", \"password\":\"${GITHUB_TOKEN}\"}]}"
 
     steps:
     - uses: actions/checkout@v2
@@ -35,5 +35,5 @@ jobs:
       if: ${{ github.ref == 'refs/heads/main' && success() }}
       
     - name: Push to repository
-      run: dotnet nuget push ./Saga/bin/Release/*.nupkg --api-key $GITHUB_TOKEN -s github
+      run: dotnet nuget push ./Saga/bin/Release/*.nupkg --api-key ${GITHUB_TOKEN} -s github
       if: ${{ github.ref == 'refs/heads/main' && success() }}
