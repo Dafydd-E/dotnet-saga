@@ -1,7 +1,7 @@
 name: .NET
 
 permissions:
-  packages: read|write
+  packages: write
 
 on:
   push:
