@@ -6,13 +6,13 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: "{\"endpointCredentials\": [{\"endpoint\":\"https://nuget.pkg.github.com/Dafydd_E/index.json\", \"username\":\"GithubToken\", \"password\":\"$GITHUB_TOKEN\"}]}"
-
 jobs:
   build:
     name: Build and Push
     runs-on: ubuntu-latest
+
+    env:
+      VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: "{\"endpointCredentials\": [{\"endpoint\":\"https://nuget.pkg.github.com/Dafydd_E/index.json\", \"username\":\"GithubToken\", \"password\":\"$GITHUB_TOKEN\"}]}"
 
     steps:
     - uses: actions/checkout@v2
