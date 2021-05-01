@@ -22,7 +22,7 @@ jobs:
         dotnet-version: 5.0.x
 
     - name: Restore dependencies
-      run: dotnet restore --configfile ./nuget.config
+      run: dotnet restore --configfile ./nuget.config --ignore-failed-sources
 
     - name: Build
       run: dotnet build --no-restore -c Release
