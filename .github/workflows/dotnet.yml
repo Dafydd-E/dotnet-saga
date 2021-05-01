@@ -38,5 +38,5 @@ jobs:
       if: ${{ github.ref == 'refs/heads/main' && success() }}
       
     - name: Push to repository
-      run: dotnet nuget push "./Saga/bin/Release/*.nupkg" --api-key "${GITHUB_TOKEN}" -s github
+      run: dotnet nuget push "./Saga/bin/Release/*.nupkg" --api-key ${GITHUB_TOKEN} -s github
       if: ${{ github.ref == 'refs/heads/main' && success() }}
