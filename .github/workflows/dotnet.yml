@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-
+    name: Build and Push
     runs-on: ubuntu-latest
 
     steps:
@@ -17,21 +17,20 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --no-restore -c Release
+
     - name: Test
       run: dotnet test --no-build --verbosity normal -c Release
-  
-  push:
-    needs: build
-    runs-on: ubuntu-latest
 
-    if: ${{ github.ref == 'refs/heads/main' && success() }}
-
-    steps:
     - name: Pack package
       run: dotnet pack --no-build -c Release ./Saga
+      if: ${{ github.ref == 'refs/heads/main' && success() }}
+      
     - name: Push to repository
       run: dotnet nuget push --api-key $GITHUB_TOKEN
+      if: ${{ github.ref == 'refs/heads/main' && success() }}
