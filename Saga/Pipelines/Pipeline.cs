@@ -43,7 +43,10 @@ namespace Saga.Pipelines
                     this.logger.LogDebug("Rolling back transaction");
                     foreach (var completedSaga in completedSagas)
                     {
-                        await completedSaga.Rollback(@event, context);
+                        if (completedSaga is ISagaWithRollback<TEvent, TContext> sagaWithRollback)
+                        {
+                            await sagaWithRollback.Rollback(@event, context);
+                        }
                     }
                 }
             }
