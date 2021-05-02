@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RepositoryUrl>https://github.com/Dafydd-E/dotnet-saga</RepositoryUrl>
+
+    <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
   </PropertyGroup>
 
   <ItemGroup>
