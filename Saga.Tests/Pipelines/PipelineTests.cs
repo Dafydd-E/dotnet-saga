@@ -47,7 +47,7 @@ namespace Saga.Tests.Pipelines
         [Theory]
         [AutoCustomData]
         public async Task Should_RollbackCompletedSagas(
-            Mock<ISaga<TestEvent, IDisposable>> saga,
+            Mock<ISagaWithRollback<TestEvent, IDisposable>> saga,
             Mock<ISaga<TestEvent, IDisposable>> exceptionSaga,
             ILogger<Pipeline<TestEvent, IDisposable, TestResult>> logger,
             Mock<IDependencyProvider<IDisposable>> dependencyProvider,
@@ -56,7 +56,6 @@ namespace Saga.Tests.Pipelines
             saga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IDisposable>())).Returns(Task.CompletedTask);
             saga.Setup(x => x.Rollback(It.IsAny<TestEvent>(), It.IsAny<IDisposable>())).Returns(Task.CompletedTask);
 
-            exceptionSaga.Setup(x => x.Rollback(It.IsAny<TestEvent>(), It.IsAny<IDisposable>()));
             exceptionSaga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IDisposable>()))
                 .Throws<Exception>();
 

@@ -40,10 +40,13 @@ namespace Saga.Pipelines
                 }
                 catch (Exception)
                 {
-                    this.logger.LogDebug("Rolling back transaction");
                     foreach (var completedSaga in completedSagas)
                     {
-                        await completedSaga.Rollback(@event, context);
+                        if (completedSaga is ISagaWithRollback<TEvent, TContext> sagaWithRollback)
+                        {
+                            this.logger.LogDebug("Rolling back transaction");
+                            await sagaWithRollback.Rollback(@event, context);
+                        }
                     }
                 }
             }
