@@ -17,7 +17,7 @@ namespace Saga.EventPublishers
             }
         }
 
-        public static async Task<TResult> Publish<TEvent, TContext, TResult>(TEvent @event) where TContext : IDisposable
+        public static async Task<TResult> Publish<TEvent, TContext, TResult>(TEvent @event) where TContext : IAsyncDisposable
         {
             using var serviceScope = ServiceScopeFactory.CreateScope();
 
