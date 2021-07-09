@@ -16,12 +16,12 @@ namespace Saga.Tests.Pipelines
         [Theory]
         [AutoCustomData]
         public async Task Should_InvokeSagaAction(
-            Mock<ISaga<TestEvent, IDisposable>> saga,
-            ILogger<Pipeline<TestEvent, IDisposable, TestResult>> logger,
-            IDependencyProvider<IDisposable> dependencyProvider,
+            Mock<ISaga<TestEvent, IAsyncDisposable>> saga,
+            ILogger<Pipeline<TestEvent, IAsyncDisposable, TestResult>> logger,
+            IDependencyProvider<IAsyncDisposable> dependencyProvider,
             Mock<IRetryScheme> retryScheme)
         {
-            saga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IDisposable>()));
+            saga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IAsyncDisposable>()));
 
             retryScheme.Setup(x => x.Retry(It.IsAny<Func<Task>>()))
                 .Callback<Func<Task>>(invocation =>
@@ -29,8 +29,8 @@ namespace Saga.Tests.Pipelines
                     invocation.Invoke().Wait();
                 });
 
-            var pipeline = new Pipeline<TestEvent, IDisposable, TestResult>(
-                new ReadOnlyCollection<ISaga<TestEvent, IDisposable>>(new List<ISaga<TestEvent, IDisposable>>
+            var pipeline = new Pipeline<TestEvent, IAsyncDisposable, TestResult>(
+                new ReadOnlyCollection<ISaga<TestEvent, IAsyncDisposable>>(new List<ISaga<TestEvent, IAsyncDisposable>>
                 {
                     saga.Object
                 }),
@@ -41,22 +41,22 @@ namespace Saga.Tests.Pipelines
 
             await pipeline.Execute(new TestEvent());
 
-            saga.Verify(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IDisposable>()));
+            saga.Verify(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IAsyncDisposable>()));
         }
 
         [Theory]
         [AutoCustomData]
         public async Task Should_RollbackCompletedSagas(
-            Mock<ISagaWithRollback<TestEvent, IDisposable>> saga,
-            Mock<ISaga<TestEvent, IDisposable>> exceptionSaga,
-            ILogger<Pipeline<TestEvent, IDisposable, TestResult>> logger,
-            Mock<IDependencyProvider<IDisposable>> dependencyProvider,
+            Mock<ISagaWithRollback<TestEvent, IAsyncDisposable>> saga,
+            Mock<ISaga<TestEvent, IAsyncDisposable>> exceptionSaga,
+            ILogger<Pipeline<TestEvent, IAsyncDisposable, TestResult>> logger,
+            Mock<IDependencyProvider<IAsyncDisposable>> dependencyProvider,
             Mock<IRetryScheme> retryScheme)
         {
-            saga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IDisposable>())).Returns(Task.CompletedTask);
-            saga.Setup(x => x.Rollback(It.IsAny<TestEvent>(), It.IsAny<IDisposable>())).Returns(Task.CompletedTask);
+            saga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IAsyncDisposable>())).Returns(Task.CompletedTask);
+            saga.Setup(x => x.Rollback(It.IsAny<TestEvent>(), It.IsAny<IAsyncDisposable>())).Returns(Task.CompletedTask);
 
-            exceptionSaga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IDisposable>()))
+            exceptionSaga.Setup(x => x.Then(It.IsAny<TestEvent>(), It.IsAny<IAsyncDisposable>()))
                 .Throws<Exception>();
 
             retryScheme
@@ -72,9 +72,9 @@ namespace Saga.Tests.Pipelines
                     function.Invoke();
                 }));
 
-            var pipeline = new Pipeline<TestEvent, IDisposable, TestResult>(
-                new ReadOnlyCollection<ISaga<TestEvent, IDisposable>>(
-                    new List<ISaga<TestEvent, IDisposable>>
+            var pipeline = new Pipeline<TestEvent, IAsyncDisposable, TestResult>(
+                new ReadOnlyCollection<ISaga<TestEvent, IAsyncDisposable>>(
+                    new List<ISaga<TestEvent, IAsyncDisposable>>
                     {
                         saga.Object,
                         exceptionSaga.Object,
@@ -86,20 +86,20 @@ namespace Saga.Tests.Pipelines
 
             await pipeline.Execute(new TestEvent());
 
-            saga.Verify(x => x.Rollback(It.IsAny<TestEvent>(), It.IsAny<IDisposable>()));
+            saga.Verify(x => x.Rollback(It.IsAny<TestEvent>(), It.IsAny<IAsyncDisposable>()));
         }
 
         [Theory]
         [AutoCustomData]
         public async Task Should_MapStateToResult(
             IRetryScheme retryScheme,
-            ILogger<Pipeline<TestEvent, IDisposable, TestResult>> logger,
-            IDependencyProvider<IDisposable> dependencyProvider,
+            ILogger<Pipeline<TestEvent, IAsyncDisposable, TestResult>> logger,
+            IDependencyProvider<IAsyncDisposable> dependencyProvider,
             TestResult result)
         {
-            var pipeline = new Pipeline<TestEvent, IDisposable, TestResult>(
-                new ReadOnlyCollection<ISaga<TestEvent, IDisposable>>(
-                    new List<ISaga<TestEvent, IDisposable>>()),
+            var pipeline = new Pipeline<TestEvent, IAsyncDisposable, TestResult>(
+                new ReadOnlyCollection<ISaga<TestEvent, IAsyncDisposable>>(
+                    new List<ISaga<TestEvent, IAsyncDisposable>>()),
                 context => result,
                 logger,
                 dependencyProvider,
@@ -113,15 +113,15 @@ namespace Saga.Tests.Pipelines
         [AutoCustomData]
         public async Task Should_DisposeOfContext(
             IRetryScheme retryScheme,
-            ILogger<Pipeline<TestEvent, IDisposable, TestResult>> logger,
-            Mock<IDependencyProvider<IDisposable>> dependencyProvider,
-            Mock<IDisposable> context)
+            ILogger<Pipeline<TestEvent, IAsyncDisposable, TestResult>> logger,
+            Mock<IDependencyProvider<IAsyncDisposable>> dependencyProvider,
+            Mock<IAsyncDisposable> context)
         {
-            context.Setup(x => x.Dispose());
+            context.Setup(x => x.DisposeAsync());
             dependencyProvider.Setup(x => x.Create()).Returns(context.Object);
 
-            var pipeline = new Pipeline<TestEvent, IDisposable, TestResult>(
-                new ReadOnlyCollection<ISaga<TestEvent, IDisposable>>(new List<ISaga<TestEvent, IDisposable>>()),
+            var pipeline = new Pipeline<TestEvent, IAsyncDisposable, TestResult>(
+                new ReadOnlyCollection<ISaga<TestEvent, IAsyncDisposable>>(new List<ISaga<TestEvent, IAsyncDisposable>>()),
                 context => new TestResult(),
                 logger,
                 dependencyProvider.Object,
@@ -129,16 +129,16 @@ namespace Saga.Tests.Pipelines
 
             await pipeline.Execute(new TestEvent());
 
-            context.Verify(x => x.Dispose());
+            context.Verify(x => x.DisposeAsync());
         }
 
         public class TestResult { }
 
-        public class TestContext : IDisposable
+        public class TestContext : IAsyncDisposable
         {
-            public void Dispose()
+            public ValueTask DisposeAsync()
             {
-                // do nothing
+                return ValueTask.CompletedTask;
             }
         }
 
