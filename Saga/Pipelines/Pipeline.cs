@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Saga.Pipelines
 {
-    public class Pipeline<TEvent, TContext, TResult> where TContext : IDisposable
+    public class Pipeline<TEvent, TContext, TResult> where TContext : IAsyncDisposable
     {
         private readonly IReadOnlyList<ISaga<TEvent, TContext>> sagas;
         private readonly Func<TContext, TResult> mapFunction;
@@ -29,7 +29,7 @@ namespace Saga.Pipelines
 
         public async Task<TResult> Execute(TEvent @event)
         {
-            using var context = this.dependencyProvider.Create();
+            await using var context = this.dependencyProvider.Create();
             var completedSagas = new List<ISaga<TEvent, TContext>>();
             foreach (var saga in this.sagas)
             {

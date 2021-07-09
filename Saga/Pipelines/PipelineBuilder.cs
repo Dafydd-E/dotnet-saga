@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Saga.Pipelines
 {
-    public class PipelineBuilder<TEvent, TContext, TResult> where TContext : IDisposable
+    public class PipelineBuilder<TEvent, TContext, TResult> where TContext : IAsyncDisposable
     {
         private readonly List<ISaga<TEvent, TContext>> sagas = new();
         private Func<TContext, TResult> mapFunction;
