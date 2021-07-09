@@ -5,6 +5,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using Saga.Eventing;
     using Saga.EventPublishers;
     using Saga.Pipelines;
     using Saga.RetrySchemes;
@@ -21,6 +22,13 @@
 
             var logger = host.Services.GetRequiredService<ILogger<Program>>();
             logger.LogInformation("Pipeline finished with result {@Result}", result);
+
+            var eventingPipeline = host.Services.GetRequiredService<EventingPipeline<DefaultContext, Event, Result>>();
+
+            logger.LogInformation("Executing eventing pipeline");
+            var eventingResult = await eventingPipeline.Execute(new Event());
+
+            logger.LogInformation("Pipeline finished with result {@Result}", eventingResult);
         }
 
         static IHostBuilder CreateHostBuilder(string[] args)
@@ -44,11 +52,27 @@
                             .WithMapFunction((context) => new Result())
                             .WithConfiguration(new PipelineConfiguration(
                                 new ExponentialBackOffScheme(
-                                    5,
+                                    2,
                                     serviceProvider.GetRequiredService<IScheduler>(),
                                     serviceProvider.GetRequiredService<ILogger<ExponentialBackOffScheme>>())))
                             .AddSagas(serviceProvider.GetServices<ISaga<Event, DefaultContext>>())
                             .Build());
+
+                    services.AddTransient<IEventingSaga<DefaultContext, Event>, EventingSaga>()
+                        .AddTransient<IEventingSaga<DefaultContext, Event>, ExceptionEventingSaga>();
+
+                    services.AddTransient<EventingPipeline<DefaultContext, Event, Result>>(
+                        (serviceProvider) => new EventingPipelineBuilder<DefaultContext, Event, Result>()
+                            .WithDependencyProvider(serviceProvider.GetRequiredService<IDependencyProvider<DefaultContext>>())
+                            .WithLogger(serviceProvider.GetRequiredService<ILogger<EventingPipeline<DefaultContext, Event, Result>>>())
+                            .WithMapping((DefaultContext context) => new Result())
+                            .WithRetryScheme(new ExponentialBackOffScheme(
+                                2,
+                                serviceProvider.GetRequiredService<IScheduler>(),
+                                serviceProvider.GetRequiredService<ILogger<ExponentialBackOffScheme>>()))
+                            .WithSagas(serviceProvider.GetServices<IEventingSaga<DefaultContext, Event>>())
+                            .Build()
+                    );
 
                     var provider = services.BuildServiceProvider();
                     services.AddSingleton<DefaultEventPublisher>(new DefaultEventPublisher(provider.GetRequiredService<IServiceScopeFactory>()));
